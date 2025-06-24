@@ -16,12 +16,9 @@ export default function CurrencySelectDropdown({ currency, label, onChange, isVa
 
 
     function handleSelect(value: string) {
-        console.log(value);
-        
         if(currencies.some(currency => currency.code == value)){
             setInput(value)
             onChange(value)
-            console.log(input);
         }
     }
 

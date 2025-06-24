@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react"
+import { type ICheckData } from "../utils/localstorage";
+import { useLocalStorage } from "@uidotdev/usehooks";
 
 interface IAmountProps {
     setAmount: (value: number) => void,
-    baseCurrency: string
+    baseCurrency: string,
 }
 
 export function InputAmount({ setAmount, baseCurrency }: IAmountProps) {
+    const [previousChecks] = useLocalStorage<ICheckData[]>('previousChecks', []);
+    const defaultAmount = previousChecks[0]?.baseAmount
     const [isValueValid, setIsValueValid] = useState(true)
-    const [value, setValue] = useState('');
+    const [value, setValue] = useState(defaultAmount || '');
     const [formattedValue, setFormattedValue] = useState<string | number>('')
-    const [displayValue, setDisplayValue] = useState<string|number>('');
+    const [displayValue, setDisplayValue] = useState<string | number>(formatValue(Number(defaultAmount)) || '');
 
     function handleChange(value: any) {
         setValue(value)
@@ -17,7 +21,6 @@ export function InputAmount({ setAmount, baseCurrency }: IAmountProps) {
 
         const parsedIntValue = parseInt(value);
         if (parsedIntValue || parsedIntValue == 0) {
-            console.log(parsedIntValue);
             const formattedValue = formatValue(parsedIntValue)
             setFormattedValue(formattedValue)
             setAmount(parsedIntValue)
@@ -27,28 +30,29 @@ export function InputAmount({ setAmount, baseCurrency }: IAmountProps) {
             setFormattedValue(value)
         }
 
-        if(value==''){
+        if (value == '') {
             setIsValueValid(true)
         }
     }
 
     useEffect(() => {
-        const parsedIntValue = parseInt(value)
+        const parsedIntValue = typeof value == 'string' ? parseInt(value): value
         if (baseCurrency && (parsedIntValue || parsedIntValue == 0)) {
             const formattedValue = formatValue(parsedIntValue)
             setFormattedValue(formattedValue);
             setDisplayValue(formattedValue)
-        } 
+        }
     }, [baseCurrency])
 
-    const formatValue = (value: number) => (baseCurrency && baseCurrency !="USDT") ? new Intl.NumberFormat('en-US', { style: 'currency', currency: baseCurrency, maximumSignificantDigits: 3 })
-        .format(value) : value
-
-    function handleFocus(){
+    function formatValue(value: number) {
+        return (baseCurrency && baseCurrency != "USDT") ? new Intl.NumberFormat('en-US', { style: 'currency', currency: baseCurrency, maximumSignificantDigits: 3 })
+            .format(value) : value
+    }
+    function handleFocus() {
         setDisplayValue(value)
     }
 
-    function handleBlur(){
+    function handleBlur() {
         setDisplayValue(formattedValue)
     }
 
