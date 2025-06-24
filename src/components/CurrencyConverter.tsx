@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { InputAmount } from "./InputAmount";
 import CurrencySelectDropdown from "./CurrencySelectDropDown";
 import { fetchBaseExchangeRate, fetchTargetExchangeRate, getValidCurrencies, type Icurrency } from "../utils/fetches";
+import { type ICheckData } from "../utils/localstorage";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import ExchangeResult from "./ExchangeResult";
 
-interface IRate {
+export interface IRate {
     baseCurrency: Icurrency | undefined,
     targetCurrency: Icurrency | undefined,
     exchangeRate: number,
-    baseRate: number,
-    targetRate: number,
+    baseRate?: number | string,
+    targetRate?: number | string,
     amount: number
 }
 
@@ -20,6 +23,25 @@ export default function CurrencyConverter() {
     const [rate, setRate] = useState<IRate | undefined>(undefined);
     const [isToValid, setIsToValid] = useState(true);
     const [isFromValid, setIsFromValid] = useState(true);
+    const [previousChecks, savePreviousChecks] = useLocalStorage<ICheckData[]>('previousChecks', []) 
+
+    useEffect(() => {
+        if (previousChecks.length) {
+            setAmount(previousChecks[0].baseAmount)
+            setFrom(previousChecks[0].base)
+            setTo(previousChecks[0].target)
+
+            const displayExchangeRate:IRate = {
+                baseCurrency: {code: previousChecks[0].base, description:''},
+                targetCurrency: {code: previousChecks[0].target, description:''},
+                amount: previousChecks[0].baseAmount,
+                exchangeRate: previousChecks[0].targetAmount
+            } 
+
+            setRate(displayExchangeRate)
+        }
+    }, [])
+
 
     const currencies = getValidCurrencies();
     function onFromChange(value: string) {
@@ -46,19 +68,19 @@ export default function CurrencyConverter() {
         setTo(temporaryHolder)
     }
 
-    function validateDropdowns(from:string, to:string){
+    function validateDropdowns(from: string, to: string) {
         const currencies = getValidCurrencies();
         let areDropDownsValid = true;
-        if(currencies.some( currency => currency.code == from)){
+        if (currencies.some(currency => currency.code == from)) {
             setIsFromValid(true)
-        } else{
+        } else {
             areDropDownsValid = false;
             setIsFromValid(false)
         }
 
-         if(currencies.some( currency => currency.code == to)){
+        if (currencies.some(currency => currency.code == to)) {
             setIsToValid(true)
-        } else{
+        } else {
             areDropDownsValid = false;
             setIsToValid(false)
         }
@@ -72,7 +94,7 @@ export default function CurrencyConverter() {
 
     async function handleSubmit() {
         const areDropDownsValid = validateDropdowns(from, to)
-        if (( amount || amount == 0) && areDropDownsValid) {
+        if ((amount || amount == 0) && areDropDownsValid) {
             const resultBaseRate: number = await fetchBaseExchangeRate(from, to);
             const resultTargetRate: number = await fetchTargetExchangeRate(from, to);
 
@@ -82,19 +104,23 @@ export default function CurrencyConverter() {
             currentRate.exchangeRate = resultBaseRate * amount;
             setRate(currentRate);
 
-        }
-        else {
-            console.log("Please choose base and target currencies");
+            const newCheck: ICheckData = {
+                base: from,
+                target: to,
+                baseAmount: amount,
+                targetAmount: resultBaseRate * amount
+            }
 
+            savePreviousChecks([newCheck, ...previousChecks])
         }
     }
-
+ 
 
     return <section className="flex justify-center w-full mx-auto mt-10">
         <div className="p-4 bg-white rounded-2xl shadow-xl">
             <div className="md:grid md:grid-cols-3 gap-3">
                 <div className="">
-                    <InputAmount setAmount={setAmount} baseCurrency={from}/>
+                    <InputAmount setAmount={setAmount} baseCurrency={from} />
                 </div>
                 <div className="col-span-2 relative grid grid-cols-2 gap-3 mt-3 md:mt-0">
                     <CurrencySelectDropdown
@@ -124,13 +150,7 @@ export default function CurrencyConverter() {
                 </div>
             </div>
             <div className="pt-5 flex justify-between">
-                <div className="flex flex-col">
-                   {rate && <>
-                        <span className="text-2xl font-bold text-gray-600">{rate?.amount} {rate?.baseCurrency?.code} - {rate?.exchangeRate} {rate?.targetCurrency?.code}</span>
-                        <span className="text-md mt-2 text-gray-600">1 {rate?.baseCurrency?.code} - {rate?.baseRate} {rate?.targetCurrency?.code}</span>
-                        <span className="text-md text-gray-600">1 {rate?.targetCurrency?.code} - {rate?.targetRate} {rate?.baseCurrency?.code}</span>
-                    </>} 
-                </div>
+                <ExchangeResult rate={rate}/>
                 <div >
                     <button className="px-7 py-3 bg-blue-700 rounded-full text-white hover:bg-blue-900 cursor-pointer" onClick={handleSubmit}>Convert</button>
                 </div>
