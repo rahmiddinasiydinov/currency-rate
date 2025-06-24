@@ -11,7 +11,6 @@ function App() {
     </header>
     <main className='flex flex-col justify-center mt-5 px-12 pb-5'>
       <p className='text-center text-xl md:text-4xl font-medium text-white'>
-        {/* {54} {'USD'} to {'UZS'} - Convert {'US Dollars'} to {'Uzbekistani Sums'} */}
       </p>
       <span className='block text-center text-xl text-white'>
         CR Currency Converter
