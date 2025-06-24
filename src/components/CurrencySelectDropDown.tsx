@@ -5,14 +5,13 @@ interface ICurrencyProps {
     label: string,
     currency: string,
     value: string,
-    onChange: (value: string) => void
+    onChange: (value: string) => void,
+    isValueValid: boolean
 }
 
-export default function CurrencySelectDropdown({ currency, label, onChange }: ICurrencyProps) {
+export default function CurrencySelectDropdown({ currency, label, onChange, isValueValid }: ICurrencyProps) {
     const [input, setInput] = useState('')
     const [focused, setFocused] = useState(false);
-    // const [currentCurrencies, setCurrentCurrencies] = useState([]);
-
     const currencies = getValidCurrencies()
 
 
@@ -35,7 +34,9 @@ export default function CurrencySelectDropdown({ currency, label, onChange }: IC
         setInput(currency)
     }, [currency])
 
-    return <div id={label} className="relative flex flex-col p-4 border border-gray-300 hover:bg-gray-100 rounded-lg cursor-pointer focus:outline-blue-400">
+    const getCurrencyType = () => label.toLowerCase()=='from' ? 'base' : 'target'
+
+    return <div><div id={label} className="relative flex flex-col p-4 border border-gray-300 hover:bg-gray-100 rounded-lg cursor-pointer focus:outline-blue-400">
         <label htmlFor="amount" className="text-sm text-gray-500">{label}</label>
         <span className="text-2xl">
             <input
@@ -45,6 +46,7 @@ export default function CurrencySelectDropdown({ currency, label, onChange }: IC
                 onChange={e => setInput(e.target.value)}
                 onFocus={() => setFocused(true)}
                 onBlur={handleBlur}
+                readOnly
             />
         </span>
         {focused && <div className="absolute left-0 top-[calc(100%+3px)] w-[100%] bg-white shadow-md rounded-md">
@@ -58,5 +60,7 @@ export default function CurrencySelectDropdown({ currency, label, onChange }: IC
             }
 
         </div>}
+    </div>
+        <p className="text-red-700">{!isValueValid && <>Please choose {getCurrencyType()} currency</>}</p>
     </div>
 }
