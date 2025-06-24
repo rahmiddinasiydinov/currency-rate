@@ -18,7 +18,7 @@ function App() {
       <CurrencyConverter />
       <CurrencyRateHistory/>
     </main>
-    <footer className=' bg-linear-to-r from-blue-600 to-blue-900 mt-5  z-[-1] w-full p-3'>
+    <footer className='fixed bottom-0 bg-linear-to-r from-blue-600 to-blue-900 mt-5  z-[-1] w-full p-3'>
       <span className='block text-center text-lg text-white'> &copy;All rights reserved</span>
     </footer>
   </div>
